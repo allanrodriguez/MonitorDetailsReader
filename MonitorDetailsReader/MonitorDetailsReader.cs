@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Security.Permissions;
 
 namespace MDReader
 {
@@ -31,7 +33,7 @@ namespace MDReader
         {
             _monitors.Clear();
 
-            NativeHelpers.EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, MonitorEnum, IntPtr.Zero);
+            NativeMethods.EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, MonitorEnum, IntPtr.Zero);
             GetDisplayDevicesForMonitors();
             GetSizeForDisplayDevices();
 
@@ -43,74 +45,77 @@ namespace MDReader
         {
             var monitorInfoEx = new MONITORINFOEX { Size = (uint)Marshal.SizeOf(typeof(MONITORINFOEX)) };
 
-            bool success = NativeHelpers.GetMonitorInfo(hMonitor, ref monitorInfoEx);
+            bool success = NativeMethods.GetMonitorInfo(hMonitor, ref monitorInfoEx);
 
             _monitors.Add(new MonitorDetails
             {
-                IsPrimaryMonitor = monitorInfoEx.Flags == NativeHelpers.MONITORINFOF_PRIMARY,
+                IsPrimaryMonitor = monitorInfoEx.Flags == NativeConstants.MONITORINFOF_PRIMARY,
                 Handle = hMonitor,
-                Name = monitorInfoEx.Device,
-                HeightScaledPixels = monitorInfoEx.Monitor.Bottom - monitorInfoEx.Monitor.Top,
-                WidthScaledPixels = monitorInfoEx.Monitor.Right - monitorInfoEx.Monitor.Left,
-                MonitorCoordinates = monitorInfoEx.Monitor,
-                WorkAreaHeight = monitorInfoEx.Work.Bottom - monitorInfoEx.Work.Top,
-                WorkAreaWidth = monitorInfoEx.Work.Right - monitorInfoEx.Work.Left,
-                WorkAreaCoordinates = monitorInfoEx.Work
+                DisplayAdapter = new DisplayDevice(monitorInfoEx.Device),
+                MonitorCoordinates = GetRectangleFromRECT(monitorInfoEx.Monitor),
+                WorkAreaCoordinates = GetRectangleFromRECT(monitorInfoEx.Work)
             });
-
+            
             return success;
         }
 
+        void GetDisplayAdapterInfoForMonitor(MonitorDetails monitorDetails)
+        {
+            var devMode = new DEVMODE { Size = (ushort)Marshal.SizeOf(typeof(DEVMODE)) };
+
+            if (NativeMethods.EnumDisplaySettings(monitorDetails.DisplayAdapter.Name, NativeConstants.ENUM_CURRENT_SETTINGS, ref devMode))
+            {
+                monitorDetails.Frequency = Convert.ToInt32(devMode.DisplayFrequency);
+                monitorDetails.Resolution = new Rectangle
+                {
+                    Width = Convert.ToInt32(devMode.PelsWidth),
+                    Height = Convert.ToInt32(devMode.PelsHeight)
+                };
+
+                // DEVMODE.LogPixels was returning the same density for all monitors, so some division is used
+                // to get the scaling factor and DPI.
+                monitorDetails.ScalingFactor = Convert.ToSingle(monitorDetails.Resolution.Width) / monitorDetails.MonitorCoordinates.Width;
+                monitorDetails.Dpi = Convert.ToInt32(96f * monitorDetails.ScalingFactor);
+            }
+        }
+
+        IDisplayDevice GetDisplayDeviceFromDISPLAY_DEVICE(DISPLAY_DEVICE displayDevice)
+        {
+            return new DisplayDevice(displayDevice.DeviceId, 
+                                     displayDevice.DeviceKey,
+                                     displayDevice.DeviceName,
+                                     displayDevice.StateFlags,
+                                     displayDevice.DeviceString);
+        }
+
+        [EnvironmentPermission(SecurityAction.Demand)]
         void GetDisplayDevicesForMonitors()
         {
-            var dd = new DISPLAY_DEVICE { Size = (uint)Marshal.SizeOf(typeof(DISPLAY_DEVICE)) };
+            var displayAdapter = new DISPLAY_DEVICE { Size = (uint)Marshal.SizeOf(typeof(DISPLAY_DEVICE)) };
+            uint devId = 0;
 
-            uint devIdx = 0;
-
-            while (NativeHelpers.EnumDisplayDevices(null, devIdx, ref dd, 0))
+            while (NativeMethods.EnumDisplayDevices(null, devId, ref displayAdapter, 0))
             {
-                ++devIdx;
+                ++devId;
 
-                if (_monitors.Find(m => m.Name == dd.DeviceName) is MonitorDetails monitorDetails)
+                if (_monitors.Find(m => m.DisplayAdapter.Name == displayAdapter.DeviceName) is MonitorDetails monitorDetails)
                 {
-                    var ddMon = new DISPLAY_DEVICE { Size = (uint)Marshal.SizeOf(typeof(DISPLAY_DEVICE)) };
-                    uint monIdx = 0;
+                    var displayMonitor = new DISPLAY_DEVICE { Size = (uint)Marshal.SizeOf(typeof(DISPLAY_DEVICE)) };
+                    uint monId = 0;
 
-                    while (NativeHelpers.EnumDisplayDevices(dd.DeviceName, monIdx, ref ddMon, 0))
+                    monitorDetails.DisplayAdapter = GetDisplayDeviceFromDISPLAY_DEVICE(displayAdapter);
+
+                    while (NativeMethods.EnumDisplayDevices(displayAdapter.DeviceName, monId, ref displayMonitor, 0))
                     {
-                        ++monIdx;
-                        monitorDetails.DisplayDeviceName = ddMon.DeviceName;
-                        monitorDetails.DisplayDeviceString = ddMon.DeviceString;
-                        monitorDetails.DisplayDeviceStateFlags = ddMon.StateFlags;
-                        monitorDetails.DisplayDeviceId = ddMon.DeviceId;
-                        monitorDetails.DisplayDeviceKey = ddMon.DeviceKey;
+                        ++monId;
+                        monitorDetails.Name = displayMonitor.DeviceName;
+                        monitorDetails.String = displayMonitor.DeviceString;
+                        monitorDetails.StateFlags = (DeviceStateFlags)displayMonitor.StateFlags;
+                        monitorDetails.Id = displayMonitor.DeviceId;
+                        monitorDetails.Key = displayMonitor.DeviceKey;
                     }
 
-                    var devMode = new DEVMODE
-                    {
-                        Size = (ushort)Marshal.SizeOf(typeof(DEVMODE)),
-                        DriverExtra = 2048,
-                        DeviceName = new Char32Array(),
-                        FormName = new Char32Array()
-                    };
-
-                    if (NativeHelpers.EnumDisplaySettings(dd.DeviceName, NativeHelpers.ENUM_CURRENT_SETTINGS, ref devMode))
-                    {
-                        monitorDetails.DisplayAdapterName = dd.DeviceName;
-                        monitorDetails.DisplayAdapterString = dd.DeviceString;
-                        monitorDetails.DisplayAdapterStateFlags = dd.StateFlags;
-                        monitorDetails.DisplayAdapterId = dd.DeviceId;
-                        monitorDetails.DisplayAdapterKey = dd.DeviceKey;
-                        
-                        monitorDetails.Frequency = (int)devMode.DisplayFrequency;
-                        monitorDetails.WidthPhysicalPixels = (int)devMode.PelsWidth;
-                        monitorDetails.HeightPhysicalPixels = (int)devMode.PelsHeight;
-
-                        // DEVMODE.LogPixels was returning the same density for all monitors, so some division is used
-                        // to get the scaling factor and DPI.
-                        monitorDetails.ScalingFactor = Convert.ToDouble(monitorDetails.WidthPhysicalPixels) / monitorDetails.WidthScaledPixels;
-                        monitorDetails.Dpi = Convert.ToInt32(96.0 * monitorDetails.ScalingFactor);
-                    }
+                    GetDisplayAdapterInfoForMonitor(monitorDetails);
                 }
             }
         }
@@ -130,7 +135,7 @@ namespace MDReader
             uint edidSize = 128;
             byte[] edidData = new byte[edidSize];
 
-            if (NativeHelpers.RegQueryValueEx(edidRegKey, "EDID", 0, 0, edidData, ref edidSize) == NativeHelpers.ERROR_SUCCESS)
+            if (NativeMethods.RegQueryValueEx(edidRegKey, "EDID", IntPtr.Zero, IntPtr.Zero, edidData, ref edidSize) == NativeConstants.ERROR_SUCCESS)
             {
                 return new ReadOnlyCollection<byte>(edidData);
             }
@@ -138,36 +143,48 @@ namespace MDReader
             return null;
         }
 
-        double[] GetMonitorSizeFromEdid(IList<byte> edidData)
+        RectangleF GetMonitorSizeFromEdid(IList<byte> edidData)
         {
-            return new double[] 
-            {
-                ((edidData[68] & 0xf0) << 4) + edidData[66],
-                ((edidData[68] & 0x0f) << 8) + edidData[67]
-            };
+            return new RectangleF(0f,
+                                  0f,
+                                  // Dividing by 10 because the width and height are originally in millimeters.
+                                  (((edidData[68] & 0xf0) << 4) + edidData[66]) / 10f,
+                                  (((edidData[68] & 0x0f) << 8) + edidData[67]) / 10f);
         }
 
+        Rectangle GetRectangleFromRECT(RECT rect)
+        {
+            return new Rectangle(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
+        }
+
+        [EnvironmentPermission(SecurityAction.Demand)]
         void GetSizeForDisplayDevices()
         {
-            IntPtr devInfo = NativeHelpers.SetupDiGetClassDevsEx(new[] { NativeHelpers.MonitorClassGuid }, null, IntPtr.Zero, NativeHelpers.DIGCF_PRESENT | NativeHelpers.DIGCF_PROFILE, IntPtr.Zero, null, IntPtr.Zero);
+            IntPtr devInfo = NativeMethods.SetupDiGetClassDevsEx(new[] { NativeConstants.MonitorClassGuid2 }, 
+                                                                 null, 
+                                                                 IntPtr.Zero, 
+                                                                 NativeConstants.DIGCF_PRESENT | NativeConstants.DIGCF_PROFILE,
+                                                                 IntPtr.Zero,
+                                                                 null,
+                                                                 IntPtr.Zero);
 
             if (devInfo == null)
             {
                 return;
             }
 
-            for (uint i = 0; Marshal.GetLastWin32Error() != NativeHelpers.ERROR_NO_MORE_ITEMS; ++i)
+            for (uint i = 0; Marshal.GetLastWin32Error() != NativeConstants.ERROR_NO_MORE_ITEMS; ++i)
             {
                 var devInfoData = new SP_DEVINFO_DATA { Size = (uint)Marshal.SizeOf(typeof(SP_DEVINFO_DATA)) };
 
-                if (NativeHelpers.SetupDiEnumDeviceInfo(devInfo, i, ref devInfoData))
+                if (NativeMethods.SetupDiEnumDeviceInfo(devInfo, i, ref devInfoData))
                 {
-                    char[] instance = new char[NativeHelpers.MAX_PATH];
-                    NativeHelpers.SetupDiGetDeviceInstanceId(devInfo, ref devInfoData, instance, NativeHelpers.MAX_PATH, 0);
+                    char[] instance = new char[NativeConstants.MAX_PATH];
+                    NativeMethods.SetupDiGetDeviceInstanceId(devInfo, ref devInfoData, instance, NativeConstants.MAX_PATH, IntPtr.Zero);
 
                     bool DoMonitorDetailsExistForDeviceId(IMonitorDetails s)
                     {
-                        string deviceId = Get2ndSlashBlock(s.DisplayDeviceId);
+                        string deviceId = Get2ndSlashBlock(s.Id);
                         string instanceString = new string(instance);
 
                         return instanceString.Contains(deviceId);
@@ -175,25 +192,20 @@ namespace MDReader
 
                     if (_monitors.Find(DoMonitorDetailsExistForDeviceId) is MonitorDetails monitorDetails)
                     {
-                        IntPtr edidRegKey = NativeHelpers.SetupDiOpenDevRegKey(devInfo, ref devInfoData, NativeHelpers.DICS_FLAG_GLOBAL, 0, NativeHelpers.DIREG_DEV, NativeHelpers.KEY_READ);
+                        IntPtr edidRegKey = NativeMethods.SetupDiOpenDevRegKey(devInfo, ref devInfoData, NativeConstants.DICS_FLAG_GLOBAL, 0, NativeConstants.DIREG_DEV, NativeConstants.KEY_READ);
 
-                        if (edidRegKey != NativeHelpers.INVALID_HANDLE_VALUE)
+                        if (edidRegKey != NativeConstants.INVALID_HANDLE_VALUE)
                         {
                             monitorDetails.Edid = GetMonitorEdidFromRegistry(edidRegKey);
-
-                            double[] widthHeight = GetMonitorSizeFromEdid(monitorDetails.Edid);
-
-                            // Dividing by 10 because the width and height are originally in millimeters.
-                            monitorDetails.WidthCentimeters = widthHeight[0] / 10.0;
-                            monitorDetails.HeightCentimeters = widthHeight[1] / 10.0;
+                            monitorDetails.Dimensions = GetMonitorSizeFromEdid(monitorDetails.Edid);
                         }
 
-                        NativeHelpers.RegCloseKey(edidRegKey);
+                        NativeMethods.RegCloseKey(edidRegKey);
                     }
                 }
             }
 
-            NativeHelpers.SetupDiDestroyDeviceInfoList(devInfo);
+            NativeMethods.SetupDiDestroyDeviceInfoList(devInfo);
         }
         #endregion
     }

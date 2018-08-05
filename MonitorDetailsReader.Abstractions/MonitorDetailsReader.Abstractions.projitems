@@ -9,6 +9,8 @@
     <Import_RootNamespace>MonitorDetailsReader.Abstractions</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)DeviceStateFlags.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IDisplayDevice.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IMonitorDetails.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IMonitorDetailsReader.cs" />
   </ItemGroup>

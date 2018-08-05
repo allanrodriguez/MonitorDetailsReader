@@ -1,6 +1,7 @@
 ﻿using MDReader.Abstractions;
 using System;
 using System.Collections.ObjectModel;
+using System.Drawing;
 
 namespace MDReader
 {
@@ -11,17 +12,9 @@ namespace MDReader
     {
         internal MonitorDetails() { }
 
-        public string DisplayAdapterId { get; internal set; }
-        public string DisplayAdapterKey { get; internal set; }
-        public string DisplayAdapterName { get; internal set; }
-        public uint DisplayAdapterStateFlags { get; internal set; }
-        public string DisplayAdapterString { get; internal set; }
+        public RectangleF Dimensions { get; internal set; }
 
-        public string DisplayDeviceId { get; internal set; }
-        public string DisplayDeviceKey { get; internal set; }
-        public string DisplayDeviceName { get; internal set; }
-        public uint DisplayDeviceStateFlags { get; internal set; }
-        public string DisplayDeviceString { get; internal set; }
+        public IDisplayDevice DisplayAdapter { get; internal set; }
 
         public int Dpi { get; internal set; }
 
@@ -33,23 +26,22 @@ namespace MDReader
 
         public bool IsPrimaryMonitor { get; internal set; }
 
+        public Rectangle MonitorCoordinates { get; internal set; }
+
+        public Rectangle Resolution { get; internal set; }
+
+        public float ScalingFactor { get; internal set; }
+
+        public Rectangle WorkAreaCoordinates { get; internal set; }
+
+        public string Id { get; internal set; }
+
+        public string Key { get; internal set; }
+
         public string Name { get; internal set; }
 
-        public double ScalingFactor { get; internal set; }
+        public DeviceStateFlags StateFlags { get; internal set; }
 
-        public double WidthCentimeters { get; internal set; }
-        public double HeightCentimeters { get; internal set; }
-
-        public int WidthPhysicalPixels { get; internal set; }
-        public int HeightPhysicalPixels { get; internal set; }
-
-        public RECT MonitorCoordinates { get; internal set; }
-        public RECT WorkAreaCoordinates { get; internal set; }
-
-        public int WorkAreaWidth { get; internal set; }
-        public int WorkAreaHeight { get; internal set; }
-
-        public int WidthScaledPixels { get; internal set; }
-        public int HeightScaledPixels { get; internal set; }
+        public string String { get; internal set; }
     }
 }

@@ -1,19 +1,12 @@
-﻿using System;
+﻿using MDReader.Abstractions;
+using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace MDReader
 {
-    class NativeHelpers
+    class NativeConstants
     {
-        #region Constants
-        internal static readonly GUID MonitorClassGuid = new GUID
-        {
-            Data1 = 0x4d36e96e,
-            Data2 = 0xe325,
-            Data3 = 0x11ce,
-            Data4 = new byte[] { 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18 }
-        };
+        internal static readonly Guid MonitorClassGuid2 = new Guid(0x4d36e96e, 0xe325, 0x11ce, 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18);
         internal static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
 
         internal const int CCHDEVICENAME = 32;
@@ -29,8 +22,10 @@ namespace MDReader
         internal const uint KEY_READ = 0x20019;
         internal const uint MAX_PATH = 260;
         internal const uint MONITORINFOF_PRIMARY = 0x00000001;
-        #endregion
+    }
 
+    class NativeMethods
+    {
         /// <summary>
         ///     Monitor Enum Delegate
         /// </summary>
@@ -217,8 +212,8 @@ namespace MDReader
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
         internal static extern uint RegQueryValueEx(IntPtr hKey,
                                                     string lpValueName,
-                                                    uint lpReserved,
-                                                    uint lpType,
+                                                    IntPtr lpReserved,
+                                                    IntPtr lpType,
                                                     byte[] lpData,
                                                     ref uint lpcbData);
 
@@ -313,7 +308,7 @@ namespace MDReader
         ///     <see cref="Marshal.GetLastWin32Error"/>.
         /// </returns>
         [DllImport("setupapi.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        internal static extern IntPtr SetupDiGetClassDevsEx(GUID[] classGuid,
+        internal static extern IntPtr SetupDiGetClassDevsEx(Guid[] classGuid,
                                                             string enumerator,
                                                             IntPtr hwndParent,
                                                             uint flags,
@@ -356,7 +351,7 @@ namespace MDReader
                                                                ref SP_DEVINFO_DATA deviceInfoData,
                                                                char[] deviceInstanceId,
                                                                uint deviceInstanceIdSize,
-                                                               uint requiredSize);
+                                                               IntPtr requiredSize);
 
         /// <summary>
         ///     Opens a registry key for device-specific configuration information.
@@ -401,106 +396,47 @@ namespace MDReader
 
     #region Native structs
     /// <summary>
-    /// Contains information about the initialization and environment of a printer or a
-    /// display device.
+    ///     Contains information about the initialization and environment of a printer or
+    ///     a display device.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Unicode)]
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     struct DEVMODE
     {
-        [FieldOffset(0)]
-        public Char32Array DeviceName;
-        [FieldOffset(64)]
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = NativeConstants.CCHDEVICENAME)]
+        public string DeviceName;
         public ushort SpecVersion;
-        [FieldOffset(66)]
         public ushort DriverVersion;
-        [FieldOffset(68)]
         public ushort Size;
-        [FieldOffset(70)]
         public ushort DriverExtra;
-        [FieldOffset(72)]
         public uint Fields;
-
-        #region DummyUnion
-        [FieldOffset(76)]
-        public short Orientation;
-        [FieldOffset(78)]
-        public short PaperSize;
-        [FieldOffset(80)]
-        public short PaperLength;
-        [FieldOffset(82)]
-        public short PaperWidth;
-        [FieldOffset(84)]
-        public short Scale;
-        [FieldOffset(86)]
-        public short Copies;
-        [FieldOffset(88)]
-        public short DefaultSource;
-        [FieldOffset(90)]
-        public short PrintQuality;
-
-        [FieldOffset(76)]
-        public int X;
-        [FieldOffset(80)]
-        public int Y;
-
-        [FieldOffset(84)]
-        public uint DisplayOrientation;
-        [FieldOffset(88)]
-        public uint DisplayFixedOutput;
-        #endregion
-
-        [FieldOffset(92)]
+        public DeviceMode Mode;
         public short Color;
-        [FieldOffset(94)]
         public short Duplex;
-        [FieldOffset(96)]
         public short YResolution;
-        [FieldOffset(98)]
         public short TTOption;
-        [FieldOffset(100)]
         public short Collate;
-        [FieldOffset(102)]
-        public Char32Array FormName;
-        [FieldOffset(166)]
+
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = NativeConstants.CCHFORMNAME)]
+        public string FormName;
         public ushort LogPixels;
-        [FieldOffset(168)]
         public uint BitsPerPel;
-        [FieldOffset(172)]
         public uint PelsWidth;
-        [FieldOffset(176)]
         public uint PelsHeight;
-
-        #region DummyUnion 2
-        [FieldOffset(180)]
-        public uint DisplayFlags;
-
-        [FieldOffset(180)]
-        public uint Nup;
-        #endregion
-
-        [FieldOffset(184)]
+        public DeviceFlags Flags;
         public uint DisplayFrequency;
-        [FieldOffset(188)]
         public uint ICMMethod;
-        [FieldOffset(192)]
         public uint ICMIntent;
-        [FieldOffset(196)]
         public uint MediaType;
-        [FieldOffset(200)]
         public uint DitherType;
-        [FieldOffset(204)]
         public uint Reserved1;
-        [FieldOffset(208)]
         public uint Reserved2;
-        [FieldOffset(212)]
         public uint PanningWidth;
-        [FieldOffset(216)]
         public uint PanningHeight;
     }
 
     /// <summary>
-    /// Receives information about the display device specified by
-    /// the iDevNum parameter of the EnumDisplayDevices function.
+    ///     Receives information about the display device specified by the iDevNum
+    ///     parameter of the EnumDisplayDevices function.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     struct DISPLAY_DEVICE
@@ -513,7 +449,7 @@ namespace MDReader
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
         public string DeviceString;
 
-        public uint StateFlags;
+        public DeviceStateFlags StateFlags;
 
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
         public string DeviceId;
@@ -523,21 +459,7 @@ namespace MDReader
     }
 
     /// <summary>
-    /// Stores a GUID.
-    /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
-    struct GUID
-    {
-        public uint Data1;
-        public ushort Data2;
-        public ushort Data3;
-
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
-        public byte[] Data4;
-    }
-
-    /// <summary>
-    /// Contains information about a display monitor.
+    ///     Contains information about a display monitor.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     struct MONITORINFOEX
@@ -547,14 +469,13 @@ namespace MDReader
         public RECT Work;
         public uint Flags;
 
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = NativeHelpers.CCHDEVICENAME)]
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = NativeConstants.CCHDEVICENAME)]
         public string Device;
     }
 
     /// <summary>
-    /// Defines a rectangle by the
-    /// coordinates of its upper-left and
-    /// lower-right corners.
+    ///     Defines a rectangle by the coordinates of its upper-left and lower-right
+    ///     corners.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT
@@ -566,91 +487,43 @@ namespace MDReader
     }
 
     /// <summary>
-    /// Defines a device instance that is
-    /// a member of a device information
-    /// set.
+    ///     Defines a device instance that is a member of a device information set.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     struct SP_DEVINFO_DATA
     {
         public uint Size;
-        public GUID ClassGuid;
+        public Guid ClassGuid;
         public uint DevInst;
         public IntPtr Reserved;
     }
     #endregion
 
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct Char32Array
+    #region Helper structs
+    [StructLayout(LayoutKind.Explicit)]
+    struct DeviceFlags
     {
-        public char A;
-        public char B;
-        public char C;
-        public char D;
-        public char E;
-        public char F;
-        public char G;
-        public char H;
-        public char I;
-        public char J;
-        public char K;
-        public char L;
-        public char M;
-        public char N;
-        public char O;
-        public char P;
-        public char Q;
-        public char R;
-        public char S;
-        public char T;
-        public char U;
-        public char V;
-        public char W;
-        public char X;
-        public char Y;
-        public char Z;
-        public char Aa;
-        public char Ab;
-        public char Ac;
-        public char Ad;
-        public char Ae;
-        public char Af;
-
-        public override string ToString()
-        {
-            return new StringBuilder(32).Append(A)
-                                        .Append(B)
-                                        .Append(C)
-                                        .Append(D)
-                                        .Append(E)
-                                        .Append(F)
-                                        .Append(G)
-                                        .Append(H)
-                                        .Append(I)
-                                        .Append(J)
-                                        .Append(K)
-                                        .Append(L)
-                                        .Append(M)
-                                        .Append(N)
-                                        .Append(O)
-                                        .Append(P)
-                                        .Append(Q)
-                                        .Append(R)
-                                        .Append(S)
-                                        .Append(T)
-                                        .Append(U)
-                                        .Append(V)
-                                        .Append(W)
-                                        .Append(X)
-                                        .Append(Y)
-                                        .Append(Z)
-                                        .Append(Aa)
-                                        .Append(Ab)
-                                        .Append(Ac)
-                                        .Append(Ad)
-                                        .Append(Ae)
-                                        .Append(Af)
-                                        .ToString();
-        }
+        [FieldOffset(0)] public uint DisplayFlags;
+        [FieldOffset(0)] public uint Nup;
     }
+
+    [StructLayout(LayoutKind.Explicit)]
+    struct DeviceMode
+    {
+        [FieldOffset(0)] public short Orientation;
+        [FieldOffset(2)] public short PaperSize;
+        [FieldOffset(4)] public short PaperLength;
+        [FieldOffset(6)] public short PaperWidth;
+        [FieldOffset(8)] public short Scale;
+        [FieldOffset(10)] public short Copies;
+        [FieldOffset(12)] public short DefaultSource;
+        [FieldOffset(14)] public short PrintQuality;
+
+        [FieldOffset(0)] public int X;
+        [FieldOffset(4)] public int Y;
+
+        [FieldOffset(8)] public uint DisplayOrientation;
+        [FieldOffset(12)] public uint DisplayFixedOutput;
+    }
+    #endregion
 }

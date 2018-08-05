@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("MonitorDetailsReader")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Monitor Details Reader")]
+[assembly: AssemblyDescription("Retrieves current settings and useful information about the monitors connected to this computer.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("MonitorDetailsReader")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCopyright("Copyright © 2018 Allan Rodriguez")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
