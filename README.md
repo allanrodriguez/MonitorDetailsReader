@@ -4,7 +4,7 @@ Retrieves current settings and useful information about the monitors connected t
 
 Credit to Ofek Shilon for his [blog posts](https://ofekshilon.com/2014/06/19/reading-specific-monitor-dimensions/) on how to get the physical dimensions of a specific monitor using Visual C++. This is basically a C# port of his code using PInvoke, with some extra functionality added to get DPI scaling factors and physical pixel dimensions.
 
-Targets .NET Framework 2.0 for maximum compatibility.
+Targets .NET Framework 4.5.
 
 ## Usage
 
