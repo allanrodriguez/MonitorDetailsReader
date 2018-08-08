@@ -6,7 +6,7 @@ namespace MDReader
 {
     class NativeConstants
     {
-        internal static readonly Guid MonitorClassGuid2 = new Guid(0x4d36e96e, 0xe325, 0x11ce, 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18);
+        internal static readonly Guid MonitorClassGuid = new Guid(0x4d36e96e, 0xe325, 0x11ce, 0xbf, 0xc1, 0x08, 0x00, 0x2b, 0xe1, 0x03, 0x18);
         internal static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
 
         internal const int CCHDEVICENAME = 32;

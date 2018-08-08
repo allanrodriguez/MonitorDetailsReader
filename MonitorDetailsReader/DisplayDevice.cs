@@ -9,9 +9,8 @@ namespace MDReader
             Id = id;
             Key = key;
             Name = name;
-            StateFlags = 0;
-            String = stringParam;
             StateFlags = stateFlags;
+            String = stringParam;
         }
 
         internal DisplayDevice(string name)

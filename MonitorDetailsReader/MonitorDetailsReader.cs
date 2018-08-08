@@ -160,7 +160,7 @@ namespace MDReader
         [EnvironmentPermission(SecurityAction.Demand)]
         void GetSizeForDisplayDevices()
         {
-            IntPtr devInfo = NativeMethods.SetupDiGetClassDevsEx(new[] { NativeConstants.MonitorClassGuid2 }, 
+            IntPtr devInfo = NativeMethods.SetupDiGetClassDevsEx(new[] { NativeConstants.MonitorClassGuid }, 
                                                                  null, 
                                                                  IntPtr.Zero, 
                                                                  NativeConstants.DIGCF_PRESENT | NativeConstants.DIGCF_PROFILE,
