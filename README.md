@@ -1,4 +1,4 @@
-# Monitor Details Reader
+# Monitor Details Reader [![Build status](https://ci.appveyor.com/api/projects/status/g2r0vk9omnw55h5t/branch/master?svg=true)](https://ci.appveyor.com/project/allanrodriguez/monitordetailsreader/branch/master)
 
 Retrieves current settings and useful information about the monitors connected to the host computer, including pixel dimensions, physical measurements, EDID, monitor handles, and virtual screen coordinates.
 
