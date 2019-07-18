@@ -50,10 +50,10 @@ namespace MonitorDetails.Test
                 Console.WriteLine();
                 Console.WriteLine($"Width (cm.):                                         {monitor.Dimensions.Width}");
                 Console.WriteLine($"Height (cm.):                                        {monitor.Dimensions.Height}");
-                Console.WriteLine();                                           
+                Console.WriteLine();
                 Console.WriteLine($"Width (pixels):                                      {monitor.Resolution.Width}");
                 Console.WriteLine($"Height (pixels):                                     {monitor.Resolution.Height}");
-                Console.WriteLine();                                           
+                Console.WriteLine();
                 Console.WriteLine($"Width (scaled pixels):                               {monitor.MonitorCoordinates.Width}");
                 Console.WriteLine($"Height (scaled pixels):                              {monitor.MonitorCoordinates.Height}");
                 Console.WriteLine();

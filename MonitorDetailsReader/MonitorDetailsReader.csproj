@@ -18,8 +18,4 @@
     <PackageReference Include="EDIDParser" Version="1.2.0.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Wrappers\" />
-  </ItemGroup>
-
 </Project>

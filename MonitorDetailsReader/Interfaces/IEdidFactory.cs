@@ -4,6 +4,6 @@ namespace MonitorDetails.Interfaces
 {
     public interface IEdidFactory
     {
-        EDID Create(byte[] edidData); 
+        EDID Create(byte[] edidData);
     }
 }
