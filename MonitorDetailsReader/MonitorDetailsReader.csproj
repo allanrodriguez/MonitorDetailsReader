@@ -12,6 +12,8 @@
     <Description>Retrieves current settings and useful information about the monitors connected to this computer.</Description>
     <Copyright>Copyright © 2019 Allan Rodriguez</Copyright>
     <RepositoryUrl>https://github.com/allanrodriguez/MonitorDetailsReader</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>monitor physical-dimensions pixel-dimensions edid</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
