@@ -14,6 +14,7 @@
     <RepositoryUrl>https://github.com/allanrodriguez/MonitorDetailsReader</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>monitor physical-dimensions pixel-dimensions edid</PackageTags>
+    <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>
