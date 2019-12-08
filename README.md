@@ -1,5 +1,6 @@
 # Monitor Details Reader
-[![Build status](https://ci.appveyor.com/api/projects/status/g2r0vk9omnw55h5t/branch/master?svg=true)](https://ci.appveyor.com/project/allanrodriguez/monitordetailsreader/branch/master) [![Coverage Status](https://coveralls.io/repos/github/allanrodriguez/MonitorDetailsReader/badge.svg?branch=master)](https://coveralls.io/github/allanrodriguez/MonitorDetailsReader?branch=master)
+
+[![Build status](https://ci.appveyor.com/api/projects/status/g2r0vk9omnw55h5t/branch/master?svg=true)](https://ci.appveyor.com/project/allanrodriguez/monitordetailsreader/branch/master) [![Coverage Status](https://coveralls.io/repos/github/allanrodriguez/MonitorDetailsReader/badge.svg?branch=master)](https://coveralls.io/github/allanrodriguez/MonitorDetailsReader?branch=master) [![Nuget](https://img.shields.io/nuget/v/MonitorDetails)](https://www.nuget.org/packages/MonitorDetails)
 
 Retrieves current settings and useful information about the monitors connected to the host computer, including pixel dimensions, physical measurements, EDID, monitor handles, and virtual screen coordinates.
 
@@ -9,7 +10,8 @@ Targets .NET Framework 4.6.1.
 
 ## Usage
 
-Create an instance of ```Reader``` and call the ```GetMonitorDetails``` method:
+Create an instance of `Reader` and call the `GetMonitorDetails` method:
+
 ```
 using MonitorDetails;
 using MonitorDetails.Models;
@@ -22,7 +24,7 @@ IEnumerable<Monitor> monitors = reader.GetMonitorDetails();
 
 ## Remarks
 
-A test console program (```MonitorDetailsReader.Test```) is included that when run prints out most of the useful information for each monitor.
+A test console program (`MonitorDetailsReader.Test`) is included that when run prints out most of the useful information for each monitor.
 
 Monitors vary far and wide, so your mileage may vary with this reader. If you have any improvements you'd like to share, feel free to submit a pull request!
 
