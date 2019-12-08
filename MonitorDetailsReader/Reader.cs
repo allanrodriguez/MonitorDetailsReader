@@ -37,7 +37,7 @@ namespace MonitorDetails
         ///     all monitors connected to this computer.
         /// </summary>
         /// <returns>
-        ///     A collection of <see cref=Monitor"/> objects containing information about all
+        ///     A collection of <see cref="Monitor"/> objects containing information about all
         ///     monitors connected to this computer.
         /// </returns>
         public IEnumerable<Models.Monitor> GetMonitorDetails()
